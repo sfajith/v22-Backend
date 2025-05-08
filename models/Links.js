@@ -12,13 +12,23 @@ const LinkSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: () => Date.now(),
+    default: Date.now,
+    required: true,
   },
   clicks: {
     type: Number,
-    required: true,
     default: 0,
   },
+  clickHistory: [
+    {
+      ip: String,
+      date: {
+        type: Date,
+        default: Date.now,
+        required: true,
+      },
+    },
+  ],
   visitors: {
     type: [String],
     default: [],

@@ -25,7 +25,7 @@ export const createShortLink = async (req, res) => {
     const newLink = new Link({
       originalUrl: originalUrl.trim(),
       shorter,
-      user: user?.id || "67e1b271dbd2523b609ec69e",
+      user: user?.id || "681d063debfbeacb5cea4668",
     });
 
     session = await mongoose.startSession();
@@ -33,7 +33,7 @@ export const createShortLink = async (req, res) => {
     try {
       await newLink.save({ session }),
         await User.findByIdAndUpdate(
-          user?.id || "681a33bdf7b354afda3e48a7",
+          user?.id || "681d063debfbeacb5cea4668",
           { $push: { shortLinks: newLink._id } },
           { new: true }
         ).session(session);
@@ -42,11 +42,13 @@ export const createShortLink = async (req, res) => {
       const enlace = await Link.findOne({ shorter });
       const idLink = enlace._id;
       const date = enlace.createdAt;
+      const clickHistory = enlace.clickHistory;
 
       return res.status(200).json({
         idLink,
         originalUrl,
         shorter: `http://localhost:3000/${shorter}`,
+        clickHistory,
         clicks: 0,
         visitors: 0,
         date,
@@ -72,7 +74,11 @@ export const linkRedirect = async (req, res) => {
 
     const enlace = await Link.findOneAndUpdate(
       { shorter: req.params.short },
-      { $inc: { clicks: 1 }, $addToSet: { visitors: userIp } },
+      {
+        $inc: { clicks: 1 },
+        $addToSet: { visitors: userIp },
+        $push: { clickHistory: { ip: userIp, date: new Date() } },
+      },
       { new: true }
     );
 
@@ -83,6 +89,8 @@ export const linkRedirect = async (req, res) => {
     //  Verifica que haya un usuario asociado
     if (enlace.user) {
       await updateUserStatistics(enlace.user.toString());
+    } else {
+      await updateUserStatistics("681d063debfbeacb5cea4668");
     }
 
     return res.redirect(enlace.originalUrl);

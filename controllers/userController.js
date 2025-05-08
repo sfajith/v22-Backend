@@ -128,6 +128,7 @@ export const myCollectionController = async (req, res) => {
       shorter: `http://localhost:3000/${link.shorter}`,
       clicks: link.clicks,
       visitors: link.visitors.length,
+      clickHistory: link.clickHistory,
       date: link.createdAt,
     }));
 
