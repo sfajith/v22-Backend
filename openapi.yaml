@@ -1,0 +1,676 @@
+openapi: 3.0.0
+info:
+  title: CaneLink API
+  description: Documentación de la API canelink con OpenAPI
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Servidor local
+paths:
+  /new:
+    post:
+      summary: Crear un nuevo enlace corto
+      description: Permite que el usuario provea un enlace para que este sea acortado - No es requerida la autenticacion con JWT.
+      tags:
+        - link
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - originalUrl
+              properties:
+                originalUrl:
+                  type: string
+                  description: Enlace original que el usuario desea acortar.
+                userCode:
+                  type: string
+                  description: Es un código que el usuario puede proveer para personalizar su enlace. Debe ser único.
+                  example: "mcdonals"
+      responses:
+        "200":
+          description: Enlace acortado exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    example: "Enlace acortado exitosamente"
+                  idLink:
+                    type: string
+                    example: "67edd1bc39b481382be90a98"
+                  originalUrl:
+                    type: string
+                    example: "https://www.youtube.com/watch?v=dpmAY059TTY&list=RDFr7oYjnt3bM&index=4"
+                  shorter:
+                    type: string
+                    example: "http://localhost:3000/cf1f2a"
+        "401":
+          description: Usuario con un token inválido.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized"
+        "500":
+          description: Error interno en el servidor.
+  /api/user/{username}/{linkId}:
+    delete:
+      summary: Elimina un enlace de la coleccion de un usuario especifico
+      description: Recibiendo el id del enlace en cuesto mediante un parametro url se elimina un enlace especifico de un usuario especifico
+      tags:
+        - delete link
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: linkId
+          in: path
+          required: true
+          description: El id del enlace a eliminar
+          schema:
+            type: string
+            example: "67edd1bc39b481382be90a98"
+      responses:
+        "200":
+          description: Enlace especifico eliminado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    example: "Enlace eliminado con exito"
+        "401":
+          description: usuario sin token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                no_token:
+                  summary: El usuario no tiene un token
+                  value:
+                    error: "No tienes permiso para esto"
+                invalid_token:
+                  summary: El usuario hace una solicitud con un token invalido
+                  value:
+                    error: "Token invalido"
+                invalid_password:
+                  sumary: La contraseña introducida por el usuario es incorrecta
+                  value:
+                    error: "Contraseña incorrecta"
+        "403":
+          description: accediendo a un acceso restringido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No tienes permiso para esto"
+        "404":
+          description: No existe el enlace
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Enlace no encontrado"
+        "500":
+          description: Error interno en el servidor.
+  /api/user/register:
+    post:
+      summary: Registro de nuevo usuario
+      description: Permite el registro de nuevos usuarios
+      tags:
+        - register
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                  description: Es el nombre de usuario de la cuenta
+                  example: "peperojas01"
+                email:
+                  type: string
+                  description: Es el correo electrónico del usuario
+                  example: "sfajith@gmail.com"
+                password:
+                  type: string
+                  description: Es la contraseña de acceso del usuario, debe contener mínimo 4 caracteres
+                  example: "IPsu91@"
+      responses:
+        "200":
+          description: Usuario registrado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    example: "Nuevo usuario registrado"
+        "400":
+          description: Problema con los datos de registro
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                missing_data:
+                  summary: Datos incompletos
+                  value:
+                    error: "Datos incompletos"
+                short_username:
+                  summary: Username demasiado corto
+                  value:
+                    error: "El username es muy corto"
+                invalid_email:
+                  summary: Correo inválido
+                  value:
+                    error: "Debes introducir un correo válido"
+                short_password:
+                  summary: Contraseña demasiado corta
+                  value:
+                    error: "La contraseña es muy corta"
+        "500":
+          description: Error interno en el servidor.
+  /api/user/login:
+    post:
+      summary: Loggin de usuario
+      description: Permite que el usuario se autentique en la aplicacion usando el username y password o bien el email y password recibiendo un token "JWT" el cual será usado para otorgar permisos especiales
+      tags:
+        - loggin
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                username:
+                  type: string
+                  description: El nombre de usuario, puede ser usado para autenticarse en el sistema
+                  example: "peperojas01"
+                email:
+                  type: string
+                  description: El correo electronico, puede ser usado para autenticarse en el sistema
+                  example: "sfajith@gmail.com"
+                password:
+                  type: string
+                  description: La contraseña del usuario
+                  example: "hsdauG92@"
+      responses:
+        "200":
+          description: Usuario logueado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    example: "Nuevo usuario registrado"
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZTgwZmJiMGQzYmE5MDFmY2EwYzM1MiIsInVzZXJuYW1lIjoidmFsZXJpYSIsInRva2VuVmVyc2lvbiI6NCwiaWF0IjoxNzQzNTI0NjM2LCJleHAiOjE3NDM1MjgyMzZ9.g_RnHD_issAk0_Qe6-Ey03OrTuKLoJYD6B4sVa-iOVo"
+        "400":
+          description: Problemas de autenticacion
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Datos incompletos"
+        "401":
+          description: Usuario || email y/o contraseña incorrectos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Usuario y/o contraseña incorrectos"
+        "500":
+          description: Error interno en el servidor.
+  /api/user/{username}:
+    get:
+      summary: Obtener la informacion del usuario
+      description: Sirve los datos del usuario en especifico basado en su username
+      tags:
+        - user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: El username del usuario
+          schema:
+            type: string
+            example: "peperojas01"
+      responses:
+        "200":
+          description: Datos del usuarios obtenidos exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "67e684ee73cebc6d70e830aa"
+                  username:
+                    type: string
+                    example: "peperojas01"
+                  email:
+                    type: string
+                    example: "sfajith@gmail.com"
+        "401":
+          description: usuario sin token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                no_token:
+                  summary: El usuario no tiene un token
+                  value:
+                  error: "No tienes permiso para esto"
+                invalid_token:
+                  summary: El usuario hace una solicitud con un token invalido
+                  value:
+                  error: "Token invalido"
+        "403":
+          description: accediendo a un acceso restringido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No tienes permiso para esto"
+        "404":
+          description: El usuario no existe
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Usuario no encontrado"
+        "500":
+          description: Error interno en el servidor.
+  /api/user/{username}/collection/{collectionNumber}:
+    get:
+      summary: Obtener la coleccion de enlaces de un usuario especifico
+      description: Sirve los enlaces creados por un usuario en especifico
+      tags:
+        - user colection
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: El username del usuario
+          schema:
+            type: string
+            example: "peperojas01"
+        - name: collectionNumber
+          in: path
+          required: true
+          description: Número de la colección (1, 2, 3...)
+          schema:
+            type: string
+            example: "1"
+      responses:
+        "200":
+          description: Colleccion del usuario obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalCount:
+                    type: number
+                    example: 1
+                  userLinks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "67edd1bc39b481382be90a98"
+                        originalUrl:
+                          type: string
+                          example: "https://www.youtube.com/watch?v=dpmAY059TTY"
+                        shorter:
+                          type: string
+                          example: "http://localhost:3000/cf1f2a"
+                  email:
+                    type: string
+                    example: "sfajith@gmail.com"
+        "401":
+          description: usuario sin token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                no_token:
+                  summary: El usuario no tiene un token
+                  value:
+                    error: "No tienes permiso para esto"
+                invalid_token:
+                  summary: El usuario hace una solicitud con un token invalido
+                  value:
+                    error: "Token invalido"
+                invalid_password:
+                  sumary: La contraseña introducida por el usuario es incorrecta
+                  value:
+                    error: "Contraseña incorrecta"
+        "403":
+          description: accediendo a un acceso restringido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No tienes permiso para esto"
+        "404":
+          description: El usuario no existe
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Usuario no encontrado"
+        "500":
+          description: Error interno en el servidor.
+  /api/user/{username}/delete:
+    delete:
+      summary: Eliminar la cuenta de un usuario registrado
+      description: Elimina la cuenta de un usuario especifico
+      tags:
+        - delete account
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                username:
+                  type: string
+                  description: La contraseña del usuario
+                  example: "jda871@"
+      responses:
+        "200":
+          description: Cuenta de usuario registrado eliminada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    example: "Usuario eliminado con exito"
+                  email:
+                    type: string
+                    example: "sfajith@gmail.com"
+        "401":
+          description: usuario sin token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                no_token:
+                  summary: El usuario no tiene un token
+                  value:
+                    error: "No tienes permiso para esto"
+                invalid_token:
+                  summary: El usuario hace una solicitud con un token invalido
+                  value:
+                    error: "Token invalido"
+        "403":
+          description: accediendo a un acceso restringido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No tienes permiso para esto"
+        "404":
+          description: No se encontró ningun dato
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                no_user:
+                  summary: El usuario no ha sido encontrado
+                  value:
+                    error: "Usuario no encontrado"
+        "500":
+          description: Error interno en el servidor.
+  /api/user/{username}/reset:
+    put:
+      summary: Actualizar la contraseña de un usuario
+      description: Se solicita la contraseña actual y la nueva contraseña para remplazar la antigua.
+      tags:
+        - change pasword
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+                - newPassword
+              properties:
+                password:
+                  type: string
+                  description: La contraseña del usuario
+                  example: "jda871@"
+                newPassword:
+                  type: string
+                  description: La nueva contraseña del usuario
+                  example: "asdh231Q$"
+      responses:
+        "200":
+          description: Confirma contraseña eliminada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    example: "Contraseña actualizada con exito"
+        "400":
+          description: falta algun dato en la solicitud
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Error en la solicitud"
+        "401":
+          description: usuario sin token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                no_token:
+                  summary: El usuario no tiene un token
+                  value:
+                    error: "No tienes permiso para esto"
+                invalid_token:
+                  summary: El usuario hace una solicitud con un token invalido
+                  value:
+                    error: "Token invalido"
+                invalid_password:
+                  summary: El usuario ingreso una contraseña incorrecta
+                  value:
+                    error: "Contraseña incorrecta"
+        "403":
+          description: accediendo a un acceso restringido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No tienes permiso para esto"
+        "404":
+          description: No se encontró ningun dato
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                no_user:
+                  summary: El usuario no ha sido encontrado
+                  value:
+                    error: "Usuario no encontrado"
+        "500":
+          description: Error interno en el servidor.
+  /api/user/{username}/logout:
+    get:
+      summary: Cerrar la sesion del usuario
+      description: Cierra la sesion de un usuario autenticado
+      tags:
+        - user logout
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Sesion cerrada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    example: "El usuario ha cerrado sesion"
+        "401":
+          description: usuario sin token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                no_token:
+                  summary: El usuario no tiene un token
+                  value:
+                    error: "No tienes permiso para esto"
+                invalid_token:
+                  summary: El usuario hace una solicitud con un token invalido
+                  value:
+                    error: "Token invalido"
+                invalid_password:
+                  summary: El usuario ingreso una contraseña incorrecta
+                  value:
+                    error: "Contraseña incorrecta"
+        "403":
+          description: accediendo a un acceso restringido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No tienes permiso para esto"
+        "404":
+          description: El usuario no existe
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Usuario no encontrado"
+        "500":
+          description: Error interno en el servidor.
