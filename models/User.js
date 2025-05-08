@@ -17,7 +17,8 @@ const userSchema = new Schema({
   },
   registeredAt: {
     type: Date,
-    default: () => Date.now(),
+    default: Date.now,
+    required: true,
   },
   shortLinks: [
     {
