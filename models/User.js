@@ -40,6 +40,20 @@ const userSchema = new Schema({
       default: 0,
     },
   },
+  linkHistory: [
+    {
+      link: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Link",
+        required: true,
+      },
+      date: {
+        type: Date,
+        default: Date.now,
+        required: true,
+      },
+    },
+  ],
 });
 
 const User = mongoose.model("User", userSchema);
