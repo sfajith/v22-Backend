@@ -80,6 +80,7 @@ export const loginController = async (req, res) => {
           username: user.username,
           email: user.email,
           statistics: user.statistics,
+          linkHistory: user.linkHistory,
         },
       });
     }

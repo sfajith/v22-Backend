@@ -26,3 +26,17 @@ export const updateUserStatistics = async (userId) => {
     );
   }
 };
+
+export const updateUserLinkHistory = async (userId, linkId) => {
+  await User.updateOne(
+    { _id: userId },
+    {
+      $push: {
+        linkHistory: {
+          link: linkId, // linkId debe ser el ObjectId del nuevo enlace creado
+          date: new Date(),
+        },
+      },
+    }
+  );
+};

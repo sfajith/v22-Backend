@@ -3,7 +3,10 @@ import Link from "../models/Links.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import { updateUserStatistics } from "../utils/statisticsUpdater.js";
+import {
+  updateUserStatistics,
+  updateUserLinkHistory,
+} from "../utils/statisticsUpdater.js";
 
 export const createShortLink = async (req, res) => {
   let session;
@@ -43,6 +46,12 @@ export const createShortLink = async (req, res) => {
       const idLink = enlace._id;
       const date = enlace.createdAt;
       const clickHistory = enlace.clickHistory;
+
+      if (user.id) {
+        await updateUserLinkHistory(user.id, idLink);
+      } else {
+        await updateUserLinkHistory("681d063debfbeacb5cea4668", idLink);
+      }
 
       return res.status(200).json({
         idLink,
