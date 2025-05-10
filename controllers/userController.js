@@ -80,7 +80,7 @@ export const loginController = async (req, res) => {
           username: user.username,
           email: user.email,
           statistics: user.statistics,
-          linkHistory: user.linkHistory,
+          LinkActivity: user.LinkActivity,
         },
       });
     }
@@ -293,10 +293,11 @@ export const authController = async (req, res) => {
   return res.status(200).json({
     ok: true,
     user: {
-      id: user.id,
+      id: user._id,
       username: user.username,
       email: user.email,
       statistics: user.statistics,
+      LinkActivity: user.LinkActivity,
     },
   });
 };

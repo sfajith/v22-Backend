@@ -40,7 +40,7 @@ const userSchema = new Schema({
       default: 0,
     },
   },
-  linkHistory: [
+  LinkActivity: [
     {
       link: {
         type: mongoose.Schema.Types.ObjectId,
