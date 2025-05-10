@@ -32,7 +32,7 @@ export const updateUserLinkHistory = async (userId, linkId) => {
     { _id: userId },
     {
       $push: {
-        linkHistory: {
+        LinkActivity: {
           link: linkId, // linkId debe ser el ObjectId del nuevo enlace creado
           date: new Date(),
         },
