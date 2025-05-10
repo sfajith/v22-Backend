@@ -54,6 +54,16 @@ const userSchema = new Schema({
       },
     },
   ],
+  clickAnalitycs: [
+    {
+      ip: String,
+      date: {
+        type: Date,
+        default: Date.now,
+        required: true,
+      },
+    },
+  ],
 });
 
 const User = mongoose.model("User", userSchema);

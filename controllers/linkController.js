@@ -97,9 +97,9 @@ export const linkRedirect = async (req, res) => {
 
     //  Verifica que haya un usuario asociado
     if (enlace.user) {
-      await updateUserStatistics(enlace.user.toString());
+      await updateUserStatistics(enlace.user.toString(), userIp);
     } else {
-      await updateUserStatistics("681d063debfbeacb5cea4668");
+      await updateUserStatistics("681d063debfbeacb5cea4668", userIp);
     }
 
     return res.redirect(enlace.originalUrl);

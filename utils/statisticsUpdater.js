@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import Link from "../models/Links.js";
 import User from "../models/User.js";
 
-export const updateUserStatistics = async (userId) => {
+export const updateUserStatistics = async (userId, userIp) => {
   const [stats] = await Link.aggregate([
     { $match: { user: new mongoose.Types.ObjectId(userId) } },
     {
@@ -21,6 +21,12 @@ export const updateUserStatistics = async (userId) => {
         $set: {
           "statistics.totalClicks": stats.totalClicks,
           "statistics.totalVisitors": stats.totalVisitors,
+        },
+        $push: {
+          clickAnalitycs: {
+            ip: userIp,
+            date: new Date(),
+          },
         },
       }
     );
