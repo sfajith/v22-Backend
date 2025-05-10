@@ -81,6 +81,7 @@ export const loginController = async (req, res) => {
           email: user.email,
           statistics: user.statistics,
           LinkActivity: user.LinkActivity,
+          clickAnalitycs: user.clickAnalitycs,
         },
       });
     }
@@ -298,6 +299,7 @@ export const authController = async (req, res) => {
       email: user.email,
       statistics: user.statistics,
       LinkActivity: user.LinkActivity,
+      clickAnalitycs: user.clickAnalitycs,
     },
   });
 };
