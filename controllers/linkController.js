@@ -21,7 +21,7 @@ export const createShortLink = async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         user = await User.findById(decoded.id);
       } catch (error) {
-        return res.status(401).json({ error: "Unauthorized" });
+        return res.status(401).json({ error: "Solicitud invalida" });
       }
     }
 
