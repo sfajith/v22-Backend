@@ -20,6 +20,9 @@ export const registerMiddleware = (req, res, next) => {
   if (triUsername.length < 4) {
     return res.status(400).json({ error: "El username es muy corto" });
   }
+  if (triUsername.length > 30) {
+    return res.status(400).json({ error: "El username es muy largo" });
+  }
 
   if (!isValidEmail(triEmail)) {
     return res.status(400).json({ error: "Debes introducir un correo valido" });

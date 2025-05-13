@@ -18,6 +18,11 @@ export const linkMiddleware = async (req, res, next) => {
       if (!codeRegex.test(code)) {
         return res.status(400).json({ error: "No es un codigo valido" });
       }
+      if (code.length > 12) {
+        return res
+          .status(400)
+          .json({ error: "Tu codigo es muy largo max 12 caracteres" });
+      }
       const codeUnique = await Link.exists({ shorter: code });
       if (codeUnique) {
         return res
@@ -25,8 +30,9 @@ export const linkMiddleware = async (req, res, next) => {
           .json({ error: "Ya existe un enlace con este codigo personalizado" });
       }
     }
-
-    if (!new URL(url)) {
+    try {
+      new URL(url);
+    } catch (error) {
       return res.status(400).json({ error: "No es un enlace válido" });
     }
 
