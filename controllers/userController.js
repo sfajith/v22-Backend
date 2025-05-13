@@ -192,6 +192,12 @@ export const resetPasswordController = async (req, res) => {
       return res.status(400).json({ error: "Error en la solicitud" });
     }
 
+    if (newPassword.length < 5) {
+      return res
+        .status(400)
+        .json({ error: "La nueva contraseña es muy corta" });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ error: "Contraseña incorrecta" });
