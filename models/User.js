@@ -64,6 +64,17 @@ const userSchema = new Schema({
       },
     },
   ],
+  isVerified: {
+    type: Boolean,
+    default: false,
+    required: true,
+  },
+  emailVerificationToken: {
+    type: String,
+  },
+  emailVerificationExpires: {
+    type: Date,
+  },
 });
 
 const User = mongoose.model("User", userSchema);

@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import User from "../models/User.js";
+import crypto from "crypto";
 
 dotenv.config();
 
@@ -76,4 +77,47 @@ export const myAccountMiddleware = async (req, res, next) => {
   } catch (error) {
     res.status(401).json({ error: "Token invalido" });
   }
+};
+
+export const verifyAccountMiddleware = async (req, res, next) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ error: "Token faltante" });
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      emailVerificationToken: hashedToken,
+      emailVerificationExpires: { $gt: Date.now() },
+      isVerified: false,
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: "Token inválido o expirado" });
+    }
+
+    user.isVerified = true;
+    user.emailVerificationToken = null;
+    user.emailVerificationExpires = null;
+    await user.save();
+
+    next();
+  } catch (error) {
+    console.error("Error en verificación:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+export const resendVerifyMiddleware = async (req, res, next) => {
+  const { email } = req.body;
+  const user = findOne({ email });
+
+  if (!user || user.isVerified) {
+    return res.status(400).send("Usuario ya está verificado o no existe.");
+  }
+  req.user = user;
+  next();
 };
