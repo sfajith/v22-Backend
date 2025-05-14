@@ -25,6 +25,7 @@
     "mongodb": "^6.15.0",
     "mongoose": "^8.12.1",
     "node-cron": "^3.0.3",
+    "resend": "^4.5.1",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.1.0",
     "yamljs": "^0.3.0"

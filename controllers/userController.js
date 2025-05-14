@@ -4,11 +4,20 @@ import Link from "../models/Links.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import crypto from "crypto";
+import sendConfirmationEmail from "../utils/sendEmail.js";
 
 dotenv.config();
 
 export const registerController = async (req, res) => {
   try {
+    //token para verificar la cuenta
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
     const saltRounds = 10;
     const { username, email, password } = req.body;
 
@@ -27,10 +36,12 @@ export const registerController = async (req, res) => {
       username: trimedUsername,
       email: trimedEmail,
       password: securePassword,
+      emailVerificationToken: hashedToken,
+      emailVerificationExpires: Date.now() + 1000 * 60 * 60,
     });
 
     await newUser.save();
-
+    await sendConfirmationEmail(email, username, rawToken);
     res.status(200).json({ success: "Nuevo usuario registrado" });
   } catch (error) {
     res.status(500).json({ error: "Error interno en el servior" });
@@ -308,4 +319,37 @@ export const authController = async (req, res) => {
       clickAnalitycs: user.clickAnalitycs,
     },
   });
+};
+
+export const verifyAccountController = async (req, res) => {
+  try {
+    res.status(200).json({ success: "Cuenta verificada con exito!" });
+  } catch (error) {
+    return res.status(500).json({ error: "error interno del servidor" });
+  }
+};
+
+export const resendVerifyController = async (req, res) => {
+  const user = req.user;
+
+  try {
+    //token para verificar la cuenta
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(simpleVerifyToken)
+      .digest("hex");
+
+    user.emailVerificationToken = hashedToken;
+    user.emailVerificationExpires = Date.now() + 1000 * 60 * 60; // 1 hora
+    await user.save();
+
+    await sendConfirmationEmail(user.email, user.username, rawToken);
+
+    res
+      .status(200)
+      .json({ sucess: "El enlace de verificación fué enviado de nuevo" });
+  } catch (error) {
+    return res.status(500).json({ error: "error interno del servidor" });
+  }
 };
