@@ -28,7 +28,7 @@ router.get(
 );
 router.delete("/:username/:linkId", myAccountMiddleware, deleteLinkController);
 router.put("/:username/reset", myAccountMiddleware, resetPasswordController);
-router.delete("/:username/delete", myAccountMiddleware, deleteController);
+router.post("/:username/delete", myAccountMiddleware, deleteController);
 router.post("/:username/logout", myAccountMiddleware, logoutController);
 router.post("/auth", myAccountMiddleware, authController);
 
