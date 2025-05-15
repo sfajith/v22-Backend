@@ -113,7 +113,9 @@ export const verifyAccountMiddleware = async (req, res, next) => {
 
 export const resendVerifyMiddleware = async (req, res, next) => {
   const { email } = req.body;
-  const user = await User.findOne({ email });
+  const trimmedEmail = email.trim().toLowerCase();
+  console.log(trimmedEmail);
+  const user = await User.findOne({ email: trimmedEmail });
 
   if (!user || user.isVerified) {
     return res
@@ -123,3 +125,5 @@ export const resendVerifyMiddleware = async (req, res, next) => {
   req.user = user;
   next();
 };
+
+export const forgotPasswordMiddleware = async () => {};
