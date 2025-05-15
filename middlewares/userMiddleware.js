@@ -113,10 +113,12 @@ export const verifyAccountMiddleware = async (req, res, next) => {
 
 export const resendVerifyMiddleware = async (req, res, next) => {
   const { email } = req.body;
-  const user = findOne({ email });
+  const user = await User.findOne({ email });
 
   if (!user || user.isVerified) {
-    return res.status(400).send("Usuario ya está verificado o no existe.");
+    return res
+      .status(400)
+      .json({ error: "Usuario ya está verificado o no existe." });
   }
   req.user = user;
   next();
