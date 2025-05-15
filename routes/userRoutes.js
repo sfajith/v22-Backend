@@ -25,6 +25,12 @@ const router = express.Router();
 router.post("/register", registerMiddleware, registerController);
 router.post("/login", loginMiddleware, loginController);
 router.get("/verify-email", verifyAccountMiddleware, verifyAccountController);
+router.post(
+  "/resend-verification",
+  resendVerifyMiddleware,
+  resendVerifyController
+);
+router.post("/auth", myAccountMiddleware, authController);
 router.get("/:username", myAccountMiddleware, myAccountController);
 router.get(
   "/:username/collection",
@@ -36,10 +42,5 @@ router.put("/:username/reset", myAccountMiddleware, resetPasswordController);
 router.post("/:username/delete", myAccountMiddleware, deleteController);
 router.post("/:username/logout", myAccountMiddleware, logoutController);
 router.post("/auth", myAccountMiddleware, authController);
-router.post(
-  "/resend-verification",
-  resendVerifyMiddleware,
-  resendVerifyController
-);
 
 export default router;
