@@ -30,6 +30,7 @@ router.post(
   resendVerifyMiddleware,
   resendVerifyController
 );
+router.post("/forgot-password");
 router.post("/auth", myAccountMiddleware, authController);
 router.get("/:username", myAccountMiddleware, myAccountController);
 router.get(

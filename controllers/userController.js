@@ -337,7 +337,7 @@ export const resendVerifyController = async (req, res) => {
     const rawToken = crypto.randomBytes(32).toString("hex");
     const hashedToken = crypto
       .createHash("sha256")
-      .update(simpleVerifyToken)
+      .update(rawToken)
       .digest("hex");
 
     user.emailVerificationToken = hashedToken;
@@ -346,9 +346,9 @@ export const resendVerifyController = async (req, res) => {
 
     await sendConfirmationEmail(user.email, user.username, rawToken);
 
-    res
+    return res
       .status(200)
-      .json({ sucess: "El enlace de verificación fué enviado de nuevo" });
+      .json({ success: "El enlace de verificación fué enviado de nuevo" });
   } catch (error) {
     return res.status(500).json({ error: "error interno del servidor" });
   }
