@@ -16,7 +16,7 @@ async function sendConfirmationEmail(to, username, rawToken) {
       <p>Hola <strong>${username}</strong>, gracias por registrarte en V22.</p>
       <p>¡Empieza a acortar tus enlaces ya!</p>
       <p>VERIFICA TU CUENTA TOCA EL ENLACE</p>
-      <p>http://localhost:3000/api/user/verify-email?token=${rawToken}</p>
+      <p>http://localhost:5173/verify-email?token=${rawToken}</p>
     </body>
   </html>`,
     });
