@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import crypto from "crypto";
 import sendConfirmationEmail from "../utils/sendEmail.js";
+import forgotPasswordEmail from "../utils/forgotPasswordEmail.js";
 
 dotenv.config();
 
@@ -349,6 +350,18 @@ export const resendVerifyController = async (req, res) => {
     return res
       .status(200)
       .json({ success: "El enlace de verificación fué enviado de nuevo" });
+  } catch (error) {
+    return res.status(500).json({ error: "error interno del servidor" });
+  }
+};
+
+export const forgotPasswordController = async (req, res) => {
+  try {
+    const user = req.user;
+    await forgotPasswordEmail(user.email);
+    return res
+      .status(200)
+      .json({ success: "Enlace de restablecimiento enviado" });
   } catch (error) {
     return res.status(500).json({ error: "error interno del servidor" });
   }

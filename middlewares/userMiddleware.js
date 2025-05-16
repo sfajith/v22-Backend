@@ -126,4 +126,20 @@ export const resendVerifyMiddleware = async (req, res, next) => {
   next();
 };
 
-export const forgotPasswordMiddleware = async () => {};
+export const forgotPasswordMiddleware = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const trimmedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: trimmedEmail });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: "No existe una cuenta asociada a ese correo" });
+    }
+    req.user = user;
+    next();
+  } catch (error) {
+    return res.status(500).json({ error: "Error interno en el servidor" });
+  }
+};
