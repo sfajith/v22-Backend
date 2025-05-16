@@ -6,6 +6,7 @@ import {
   verifyAccountMiddleware,
   resendVerifyMiddleware,
   forgotPasswordMiddleware,
+  recoverPasswordMiddleware,
 } from "../middlewares/userMiddleware.js";
 import {
   registerController,
@@ -20,6 +21,7 @@ import {
   verifyAccountController,
   resendVerifyController,
   forgotPasswordController,
+  recoverPasswordController,
 } from "../controllers/userController.js";
 
 const router = express.Router();
@@ -36,6 +38,11 @@ router.post(
   "/forgot-password",
   forgotPasswordMiddleware,
   forgotPasswordController
+);
+router.post(
+  "/recover-password",
+  recoverPasswordMiddleware,
+  recoverPasswordController
 );
 router.post("/auth", myAccountMiddleware, authController);
 router.get("/:username", myAccountMiddleware, myAccountController);

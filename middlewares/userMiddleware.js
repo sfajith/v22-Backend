@@ -140,6 +140,43 @@ export const forgotPasswordMiddleware = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
+    console.log(error);
     return res.status(500).json({ error: "Error interno en el servidor" });
+  }
+};
+
+export const recoverPasswordMiddleware = async (req, res, next) => {
+  try {
+    const { password } = req.body;
+    const { token } = req.query;
+    const trimmedPassword = password.trim();
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    if (!password || trimmedPassword.length < 5) {
+      return res
+        .status(400)
+        .json({ error: "Faltó la contraseña o es muy corta" });
+    }
+    if (!token) {
+      return res.status(400).json({ error: "Falta el token" });
+    }
+
+    const user = await User.findOne({
+      forgotPasswordToken: hashedToken,
+      forgotPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        error: "Este enlace ya expiró o es invalido, solicita un nuevo enlace",
+      });
+    }
+    req.user = user;
+    req.trimmedPassword = trimmedPassword;
+
+    next();
+  } catch (error) {
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
 };

@@ -45,7 +45,6 @@ const userSchema = new Schema({
       link: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Link",
-        required: true,
       },
       date: {
         type: Date,
@@ -73,6 +72,12 @@ const userSchema = new Schema({
     type: String,
   },
   emailVerificationExpires: {
+    type: Date,
+  },
+  forgotPasswordToken: {
+    type: String,
+  },
+  forgotPasswordExpires: {
     type: Date,
   },
 });
