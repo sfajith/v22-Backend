@@ -356,12 +356,49 @@ export const resendVerifyController = async (req, res) => {
 };
 
 export const forgotPasswordController = async (req, res) => {
+  const user = req.user;
   try {
-    const user = req.user;
-    await forgotPasswordEmail(user.email);
+    const forgotToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(forgotToken)
+      .digest("hex");
+
+    user.forgotPasswordToken = hashedToken;
+    user.forgotPasswordExpires = Date.now() + 1000 * 60 * 15;
+    await user.save();
+
+    await forgotPasswordEmail(user.email, forgotToken);
     return res
       .status(200)
       .json({ success: "Enlace de restablecimiento enviado" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "error interno del servidor" });
+  }
+};
+
+export const recoverPasswordController = async (req, res) => {
+  try {
+    const user = req.user;
+    const trimmedPassword = req.trimmedPassword;
+    const saltRounds = 10;
+    const hashPassword = async (plainPassword) => {
+      const salt = await bcrypt.genSalt(saltRounds); // Genera un "salt"
+      const hashedPassword = await bcrypt.hash(plainPassword, salt); // Hashea la contraseña
+      return hashedPassword;
+    };
+    const securePassword = await hashPassword(trimmedPassword);
+
+    user.forgotPasswordToken = null;
+    user.forgotPasswordExpires = null;
+    user.password = securePassword;
+
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ success: "Contraseña reestablecida con exito." });
   } catch (error) {
     return res.status(500).json({ error: "error interno del servidor" });
   }
