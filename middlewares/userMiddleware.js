@@ -55,7 +55,7 @@ export const registerMiddleware = async (req, res, next) => {
       .json({ error: "La contraseña debe tener entre 8 y 64 caracteres." });
   }
 
-  next();
+  return next();
 };
 
 export const loginMiddleware = (req, res, next) => {
@@ -67,7 +67,7 @@ export const loginMiddleware = (req, res, next) => {
     return res.status(400).json({ error: "Datos incompletos" });
   }
 
-  next();
+  return next();
 };
 
 export const myAccountMiddleware = async (req, res, next) => {
@@ -102,7 +102,7 @@ export const myAccountMiddleware = async (req, res, next) => {
     }
 
     req.user = user;
-    next();
+    return next();
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: "Error interno del servidor" });
@@ -134,7 +134,7 @@ export const verifyAccountMiddleware = async (req, res, next) => {
     user.emailVerificationExpires = null;
     await user.save();
 
-    next();
+    return next();
   } catch (error) {
     console.error("Error en verificación:", error);
     return res.status(500).json({ error: "Error interno del servidor" });
@@ -153,7 +153,7 @@ export const resendVerifyMiddleware = async (req, res, next) => {
       .json({ error: "Usuario ya está verificado o no existe." });
   }
   req.user = user;
-  next();
+  return next();
 };
 
 export const forgotPasswordMiddleware = async (req, res, next) => {
@@ -168,7 +168,7 @@ export const forgotPasswordMiddleware = async (req, res, next) => {
         .json({ error: "No existe una cuenta asociada a ese correo" });
     }
     req.user = user;
-    next();
+    return next();
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: "Error interno en el servidor" });
@@ -205,7 +205,49 @@ export const recoverPasswordMiddleware = async (req, res, next) => {
     req.user = user;
     req.trimmedPassword = trimmedPassword;
 
-    next();
+    return next();
+  } catch (error) {
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+export const liveValidationMiddleware = async (req, res, next) => {
+  try {
+    const { username, email } = req.body;
+
+    if ((username && email) || (!username && !email)) {
+      return res
+        .status(400)
+        .json({ error: "Solo se debe verificar un campo a la vez." });
+    }
+
+    if (username && !email) {
+      const trimmedUsername = username.trim().toLowerCase();
+      const regexUsername = /^[a-z0-9._]{3,20}$/;
+      if (!regexUsername.test(trimmedUsername)) {
+        return res.status(400).json({
+          error:
+            "El nombre de usuario debe tener entre 3 y 20 caracteres y solo puede contener letras, números, puntos o guiones bajos.",
+        });
+      }
+      const user = await User.findOne({ username: trimmedUsername });
+      req.user = user;
+      return next();
+    }
+
+    if (email && !username) {
+      const trimmedEmail = email.trim().toLowerCase();
+      const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+      if (!isValidEmail(trimmedEmail) || trimmedEmail.length > 254) {
+        return res.status(400).json({
+          error: "Debes introducir un correo válido (máximo 254 caracteres).",
+        });
+      }
+      const userEmail = await User.findOne({ email: trimmedEmail });
+      req.userEmail = userEmail;
+      return next();
+    }
   } catch (error) {
     return res.status(500).json({ error: "Error interno del servidor" });
   }

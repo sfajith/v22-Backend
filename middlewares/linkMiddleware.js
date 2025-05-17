@@ -36,7 +36,7 @@ export const linkMiddleware = async (req, res, next) => {
       return res.status(400).json({ error: "No es un enlace válido" });
     }
 
-    next();
+    return next();
   } catch (error) {
     console.log(error, "desde middleware");
     return res.status(500).json({ error: "Error interno en el servidor" });
@@ -50,7 +50,7 @@ export const redirectMiddleware = async (req, res, next) => {
     return res.status(400).json({ error: "No es un enlace valido" });
   }
 
-  next();
+  return next();
 };
 
 export const liveCodeMiddleware = async (req, res, next) => {
@@ -69,12 +69,10 @@ export const liveCodeMiddleware = async (req, res, next) => {
       }
       const codeUnique = await Link.exists({ shorter: code });
       if (codeUnique) {
-        return res
-          .status(400)
-          .json({ error: "Ya existe un enlace con este codigo personalizado" });
+        return res.status(400).json({ error: "No Disponible!" });
       }
     }
-    next();
+    return next();
   } catch (error) {
     return res.status(500).json({ error: "Error interno en el servidor" });
   }

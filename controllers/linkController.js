@@ -109,7 +109,8 @@ export const linkRedirect = async (req, res) => {
 
 export const liveCodeController = async (req, res) => {
   try {
-    return res.status(200).json({ success: "Disponible" });
+    console.log("disponible");
+    return res.status(200).json({ success: "Disponible!" });
   } catch (error) {
     return res.status(500).json({ error: "Error interno en el servidor" });
   }
