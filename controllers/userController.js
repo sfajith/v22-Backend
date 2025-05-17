@@ -412,3 +412,21 @@ export const recoverPasswordController = async (req, res) => {
     return res.status(500).json({ error: "error interno del servidor" });
   }
 };
+
+export const liveValidationController = async (req, res) => {
+  try {
+    if (req.user) {
+      return res
+        .status(409)
+        .json({ error: "Nombre de usuario ya está en uso" });
+    }
+
+    if (req.userEmail) {
+      return res.status(409).json({ error: "Correo ya está registrado" });
+    }
+
+    return res.status(200).json({ success: "Disponible!" });
+  } catch (error) {
+    return res.status(500).json({ error: "error interno del servidor" });
+  }
+};

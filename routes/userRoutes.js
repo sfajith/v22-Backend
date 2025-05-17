@@ -7,6 +7,7 @@ import {
   resendVerifyMiddleware,
   forgotPasswordMiddleware,
   recoverPasswordMiddleware,
+  liveValidationMiddleware,
 } from "../middlewares/userMiddleware.js";
 import {
   registerController,
@@ -22,6 +23,7 @@ import {
   resendVerifyController,
   forgotPasswordController,
   recoverPasswordController,
+  liveValidationController,
 } from "../controllers/userController.js";
 
 const router = express.Router();
@@ -45,6 +47,11 @@ router.post(
   recoverPasswordController
 );
 router.post("/auth", myAccountMiddleware, authController);
+router.post(
+  "/live-validation",
+  liveValidationMiddleware,
+  liveValidationController
+);
 router.get("/:username", myAccountMiddleware, myAccountController);
 router.get(
   "/:username/collection",
