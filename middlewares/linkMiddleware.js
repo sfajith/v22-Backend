@@ -38,7 +38,7 @@ export const linkMiddleware = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.log(error);
+    console.log(error, "desde middleware");
     return res.status(500).json({ error: "Error interno en el servidor" });
   }
 };
@@ -51,4 +51,31 @@ export const redirectMiddleware = async (req, res, next) => {
   }
 
   next();
+};
+
+export const liveCodeMiddleware = async (req, res, next) => {
+  try {
+    const { userCode } = req.body;
+    const code = userCode?.trim() ?? "";
+    if (code) {
+      const codeRegex = /^[a-zA-Z0-9_-]+$/;
+      if (!codeRegex.test(code)) {
+        return res.status(400).json({ error: "No es un codigo valido" });
+      }
+      if (code.length > 12) {
+        return res
+          .status(400)
+          .json({ error: "Tu codigo es muy largo. max 12 caracteres" });
+      }
+      const codeUnique = await Link.exists({ shorter: code });
+      if (codeUnique) {
+        return res
+          .status(400)
+          .json({ error: "Ya existe un enlace con este codigo personalizado" });
+      }
+    }
+    next();
+  } catch (error) {
+    return res.status(500).json({ error: "Error interno en el servidor" });
+  }
 };

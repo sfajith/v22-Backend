@@ -28,30 +28,28 @@ export const createShortLink = async (req, res) => {
     const newLink = new Link({
       originalUrl: originalUrl.trim(),
       shorter,
-      user: user?.id || "681d063debfbeacb5cea4668",
+      user: user?.id || "6828a8479fa7700b624a97f1", // Usuario por defecto si no hay user
     });
 
     session = await mongoose.startSession();
     session.startTransaction();
     try {
-      await newLink.save({ session }),
-        await User.findByIdAndUpdate(
-          user?.id || "681d063debfbeacb5cea4668",
-          { $push: { shortLinks: newLink._id } },
-          { new: true }
-        ).session(session);
+      await newLink.save({ session });
+      await User.findByIdAndUpdate(
+        user?.id || "6828a8479fa7700b624a97f1",
+        { $push: { shortLinks: newLink._id } },
+        { new: true }
+      ).session(session);
+
       await session.commitTransaction();
-      session.endSession();
+
       const enlace = await Link.findOne({ shorter });
       const idLink = enlace._id;
       const date = enlace.createdAt;
       const clickHistory = enlace.clickHistory;
 
-      if (user.id) {
-        await updateUserLinkHistory(user.id, idLink);
-      } else {
-        await updateUserLinkHistory("681d063debfbeacb5cea4668", idLink);
-      }
+      const userId = user?.id || "6828a8479fa7700b624a97f1";
+      await updateUserLinkHistory(userId, idLink);
 
       return res.status(200).json({
         idLink,
@@ -64,14 +62,14 @@ export const createShortLink = async (req, res) => {
       });
     } catch (error) {
       await session.abortTransaction();
-      session.endSession();
       throw error;
     }
   } catch (error) {
+    console.log(error, "desde controlador");
     return res.status(500).json({ error: "Error interno en el servidor" });
   } finally {
     if (session) {
-      await session.endSession();
+      session.endSession();
     }
   }
 };
@@ -99,12 +97,20 @@ export const linkRedirect = async (req, res) => {
     if (enlace.user) {
       await updateUserStatistics(enlace.user.toString(), userIp);
     } else {
-      await updateUserStatistics("681d063debfbeacb5cea4668", userIp);
+      await updateUserStatistics("6828a8479fa7700b624a97f1", userIp);
     }
 
     return res.redirect(enlace.originalUrl);
   } catch (error) {
     console.error("Error en la redirección:", error);
     return res.status(500).json({ error: "Error interno del server" });
+  }
+};
+
+export const liveCodeController = async (req, res) => {
+  try {
+    return res.status(200).json({ success: "Disponible" });
+  } catch (error) {
+    return res.status(500).json({ error: "Error interno en el servidor" });
   }
 };
