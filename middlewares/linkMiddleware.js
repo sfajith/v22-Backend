@@ -21,7 +21,7 @@ export const linkMiddleware = async (req, res, next) => {
       if (code.length > 12) {
         return res
           .status(400)
-          .json({ error: "Tu codigo es muy largo max 12 caracteres" });
+          .json({ error: "Tu codigo es muy largo. max 12 caracteres" });
       }
       const codeUnique = await Link.exists({ shorter: code });
       if (codeUnique) {

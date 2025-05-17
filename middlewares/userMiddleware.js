@@ -12,9 +12,17 @@ export const registerMiddleware = async (req, res, next) => {
     return res.status(400).json({ error: "datos imcompletos" });
   }
 
-  const triUsername = username.trim(),
+  const triUsername = username.trim().toLowerCase(),
     triEmail = email.toLowerCase(),
     triPassword = password.trim();
+
+  const regexUsername = /^[a-z0-9._]{3,20}$/;
+  if (!regexUsername.test(triUsername)) {
+    return res.status(400).json({
+      error:
+        "El nombre de usuario debe tener entre 3 y 20 caracteres y solo puede contener letras, números, puntos o guiones bajos.",
+    });
+  }
 
   const [user, userEmail] = await Promise.all([
     User.findOne({ username: triUsername }),
@@ -33,21 +41,18 @@ export const registerMiddleware = async (req, res, next) => {
       .json({ error: "Ya existe una cuenta asociada a ese correo" });
   }
 
-  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(triEmail);
 
-  if (triUsername.length < 4) {
-    return res.status(400).json({ error: "El username es muy corto" });
-  }
-  if (triUsername.length > 30) {
-    return res.status(400).json({ error: "El username es muy largo" });
-  }
-
-  if (!isValidEmail(triEmail)) {
-    return res.status(400).json({ error: "Debes introducir un correo valido" });
+  if (!isValidEmail(triEmail) || triEmail.length > 254) {
+    return res.status(400).json({
+      error: "Debes introducir un correo válido (máximo 254 caracteres).",
+    });
   }
 
-  if (triPassword.length < 4) {
-    return res.status(400).json({ error: "La contraseña es muy corta" });
+  if (triPassword.length < 8 || triPassword.length > 64) {
+    return res
+      .status(400)
+      .json({ error: "La contraseña debe tener entre 8 y 64 caracteres." });
   }
 
   next();
