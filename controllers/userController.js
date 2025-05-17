@@ -45,6 +45,7 @@ export const registerController = async (req, res) => {
     await sendConfirmationEmail(email, username, rawToken);
     res.status(200).json({ success: "Nuevo usuario registrado" });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Error interno en el servior" });
   }
 };
@@ -118,7 +119,11 @@ export const myCollectionController = async (req, res) => {
     const { cursor, limit = 6 } = req.query;
     const user = await User.findOne({ username }).lean();
     if (!user || !user.shortLinks || user.shortLinks.length === 0) {
-      return res.status(404).json({ error: "no hay nada para mostrar" });
+      return res.status(200).json({
+        totalCount: 0,
+        collection: [],
+        nextCursor: null,
+      });
     }
     const shortLinks = user.shortLinks;
 
@@ -308,18 +313,22 @@ export const deleteLinkController = async (req, res) => {
 };
 
 export const authController = async (req, res) => {
-  const user = req.user;
-  return res.status(200).json({
-    ok: true,
-    user: {
-      id: user._id,
-      username: user.username,
-      email: user.email,
-      statistics: user.statistics,
-      LinkActivity: user.LinkActivity,
-      clickAnalitycs: user.clickAnalitycs,
-    },
-  });
+  try {
+    const user = req.user;
+    return res.status(200).json({
+      ok: true,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        statistics: user.statistics,
+        LinkActivity: user.LinkActivity,
+        clickAnalitycs: user.clickAnalitycs,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ error: "error interno del servidor" });
+  }
 };
 
 export const verifyAccountController = async (req, res) => {
