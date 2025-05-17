@@ -68,6 +68,13 @@ export const loginMiddleware = (req, res, next) => {
 export const myAccountMiddleware = async (req, res, next) => {
   const { username } = req.params;
   try {
+    const authHeader = req.header("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        error: "No tienes permiso para esto (token ausente o mal formado)",
+      });
+    }
+
     const token = req.header("Authorization")?.replace("Bearer ", "");
 
     if (!token) {
