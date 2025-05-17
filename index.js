@@ -21,6 +21,12 @@ const limiter = rateLimit({
   limit: 100,
   standardHeaders: "draft-8",
   legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      error:
+        "Has superado el límite de peticiones. Intenta nuevamente en unos minutos.",
+    });
+  },
 });
 
 const app = express();

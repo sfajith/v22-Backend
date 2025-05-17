@@ -5,7 +5,7 @@ import crypto from "crypto";
 
 dotenv.config();
 
-export const registerMiddleware = (req, res, next) => {
+export const registerMiddleware = async (req, res, next) => {
   const { username, email, password } = req.body;
 
   if (!username || !email || !password) {
@@ -15,6 +15,23 @@ export const registerMiddleware = (req, res, next) => {
   const triUsername = username.trim(),
     triEmail = email.toLowerCase(),
     triPassword = password.trim();
+
+  const [user, userEmail] = await Promise.all([
+    User.findOne({ username: triUsername }),
+    User.findOne({ email: triEmail }),
+  ]);
+
+  if (user) {
+    return res
+      .status(400)
+      .json({ error: "Ya existe un usuario con ese nombre" });
+  }
+
+  if (userEmail) {
+    return res
+      .status(400)
+      .json({ error: "Ya existe una cuenta asociada a ese correo" });
+  }
 
   const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -69,13 +86,14 @@ export const myAccountMiddleware = async (req, res, next) => {
       return res.status(403).json({ error: "No tienes permiso para esto" });
     } */
     if (user.tokenVersion !== decoded.tokenVersion) {
-      return res.status(401).json({ error: "Token invalido" });
+      return res.status(401).json({ error: "Token invalido o expirado" });
     }
 
     req.user = user;
     next();
   } catch (error) {
-    res.status(401).json({ error: "Token invalido" });
+    console.log(error);
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
 };
 
