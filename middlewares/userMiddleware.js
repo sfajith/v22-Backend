@@ -211,44 +211,45 @@ export const recoverPasswordMiddleware = async (req, res, next) => {
   }
 };
 
-export const liveValidationMiddleware = async (req, res, next) => {
+export const usernameValidationMiddleware = async (req, res, next) => {
   try {
-    const { username, email } = req.body;
+    const { username } = req.body;
 
-    if ((username && email) || (!username && !email)) {
-      return res
-        .status(400)
-        .json({ error: "Solo se debe verificar un campo a la vez." });
+    if (!username) {
+      return res.status(400).json({ error: "No existe username" });
     }
 
-    if (username && !email) {
-      const trimmedUsername = username.trim().toLowerCase();
-      const regexUsername = /^[a-z0-9._]{3,20}$/;
-      if (!regexUsername.test(trimmedUsername)) {
-        return res.status(400).json({
-          error:
-            "El nombre de usuario debe tener entre 3 y 20 caracteres y solo puede contener letras, números, puntos o guiones bajos.",
-        });
-      }
-      const user = await User.findOne({ username: trimmedUsername });
-      req.user = user;
-      return next();
+    const trimmedUsername = username.trim().toLowerCase();
+    const regexUsername = /^[a-z0-9._]{3,20}$/;
+    if (!regexUsername.test(trimmedUsername)) {
+      return res.status(400).json({
+        error:
+          "El nombre de usuario debe tener entre 3 y 20 caracteres y solo puede contener letras, números, puntos o guiones bajos.",
+      });
     }
-
-    if (email && !username) {
-      const trimmedEmail = email.trim().toLowerCase();
-      const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-      if (!isValidEmail(trimmedEmail) || trimmedEmail.length > 254) {
-        return res.status(400).json({
-          error: "Debes introducir un correo válido (máximo 254 caracteres).",
-        });
-      }
-      const userEmail = await User.findOne({ email: trimmedEmail });
-      req.userEmail = userEmail;
-      return next();
-    }
+    const user = await User.findOne({ username: trimmedUsername });
+    req.user = user;
+    return next();
   } catch (error) {
     return res.status(500).json({ error: "Error interno del servidor" });
   }
+};
+
+export const emailValidationMiddleware = async (req, res, next) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: "No existe email" });
+  }
+
+  const trimmedEmail = email.trim().toLowerCase();
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  if (!isValidEmail(trimmedEmail) || trimmedEmail.length > 254) {
+    return res.status(400).json({
+      error: "Debes introducir un correo válido (máximo 254 caracteres).",
+    });
+  }
+  const userEmail = await User.findOne({ email: trimmedEmail });
+  req.userEmail = userEmail;
+  return next();
 };

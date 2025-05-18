@@ -413,18 +413,26 @@ export const recoverPasswordController = async (req, res) => {
   }
 };
 
-export const liveValidationController = async (req, res) => {
+export const usernameValidationController = async (req, res) => {
   try {
     if (req.user) {
       return res
         .status(409)
         .json({ error: "Nombre de usuario ya está en uso" });
     }
+    return res.status(200).json({ success: "Disponible!" });
+  } catch (error) {
+    return res.status(500).json({ error: "error interno del servidor" });
+  }
+};
 
+export const emailValidationController = async (req, res) => {
+  try {
     if (req.userEmail) {
-      return res.status(409).json({ error: "Correo ya está registrado" });
+      return res
+        .status(409)
+        .json({ error: "Ya existe una cuenta registrada con este correo" });
     }
-
     return res.status(200).json({ success: "Disponible!" });
   } catch (error) {
     return res.status(500).json({ error: "error interno del servidor" });
