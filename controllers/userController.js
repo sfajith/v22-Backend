@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import crypto from "crypto";
 import sendConfirmationEmail from "../utils/sendEmail.js";
 import forgotPasswordEmail from "../utils/forgotPasswordEmail.js";
+import { checkPwnedPassword } from "../utils/checkPwnedPassword.js";
 
 dotenv.config();
 
@@ -239,7 +240,7 @@ export const resetPasswordController = async (req, res) => {
       { older: oldPassword, changedAt: new Date() },
     ];
 
-    if (newOlderPasswords.length > 5) {
+    if (newOlderPasswords.length > 24) {
       newOlderPasswords.shift();
     }
 
@@ -465,5 +466,20 @@ export const emailValidationController = async (req, res) => {
     return res.status(200).json({ success: "Disponible!" });
   } catch (error) {
     return res.status(500).json({ error: "error interno del servidor" });
+  }
+};
+
+export const passwordValidationControlador = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const isGood = await checkPwnedPassword(password);
+    if (!isGood)
+      return res
+        .status(400)
+        .json({ error: "la contraseña se encuentra en Pwned" });
+
+    return res.status(200).json({ success: "la contraseña es segura" });
+  } catch (error) {
+    return res.status(500).json({ error: "Error interno en el servidor" });
   }
 };

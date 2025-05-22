@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import User from "../models/User.js";
 import crypto from "crypto";
+import { validatePasswordStrength } from "../../shared/dist/validatePasswordStrength.js";
 
 dotenv.config();
 
@@ -257,4 +258,25 @@ export const emailValidationMiddleware = async (req, res, next) => {
   const userEmail = await User.findOne({ email: trimmedEmail });
   req.userEmail = userEmail;
   return next();
+};
+
+export const passwordValidationMiddleware = (req, res, next) => {
+  try {
+    const { password } = req.body;
+    if (!password) {
+      return res
+        .status(400)
+        .json({ error: "debes introducir una contraseña correcta" });
+    }
+
+    const isStrength = validatePasswordStrength(password);
+
+    if (isStrength.strength === "Débil") {
+      return res.status(400).json({ error: "Esta es una contraseña débil" });
+    }
+
+    next();
+  } catch (error) {
+    return res.status(500).json({ error: "Error interno en el servidor" });
+  }
 };

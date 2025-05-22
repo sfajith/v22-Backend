@@ -9,6 +9,7 @@ import {
   recoverPasswordMiddleware,
   usernameValidationMiddleware,
   emailValidationMiddleware,
+  passwordValidationMiddleware,
 } from "../middlewares/userMiddleware.js";
 import {
   registerController,
@@ -26,6 +27,7 @@ import {
   recoverPasswordController,
   usernameValidationController,
   emailValidationController,
+  passwordValidationControlador,
 } from "../controllers/userController.js";
 
 const router = express.Router();
@@ -58,6 +60,11 @@ router.post(
   "/email-validation",
   emailValidationMiddleware,
   emailValidationController
+);
+router.post(
+  "/password-validation",
+  passwordValidationMiddleware,
+  passwordValidationControlador
 );
 router.get("/:username", myAccountMiddleware, myAccountController);
 router.get(
