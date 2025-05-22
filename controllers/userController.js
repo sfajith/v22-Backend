@@ -209,10 +209,16 @@ export const resetPasswordController = async (req, res) => {
       return res.status(400).json({ error: "Error en la solicitud" });
     }
 
-    if (newPassword.length < 5) {
+    if (newPassword.length < 6) {
       return res
         .status(400)
         .json({ error: "La nueva contraseña es muy corta" });
+    }
+
+    if (newPassword === password) {
+      return res
+        .status(400)
+        .json({ error: "Ya usaste esta contraseña en el pasado" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -226,12 +232,35 @@ export const resetPasswordController = async (req, res) => {
       return hashedPassword;
     };
 
+    const oldPassword = user.password;
+    const olderPasswords = user.olderPasswords || [];
+    const newOlderPasswords = [
+      ...olderPasswords,
+      { older: oldPassword, changedAt: new Date() },
+    ];
+
+    if (newOlderPasswords.length > 5) {
+      newOlderPasswords.shift();
+    }
+
+    for (const item of olderPasswords) {
+      const isSame = await bcrypt.compare(newPassword, item.older);
+      if (isSame) {
+        return res.status(400).json({
+          error:
+            "Ya has usado esta contraseña recientemente. Por favor, elige una diferente.",
+        });
+      }
+    }
     const newSecurePassword = await hashPassword(newPassword);
 
     await User.findByIdAndUpdate(
       user.id,
       {
-        $set: { password: newSecurePassword },
+        $set: {
+          password: newSecurePassword,
+          olderPasswords: newOlderPasswords,
+        },
         $inc: { tokenVersion: 1 },
       },
       { new: true }

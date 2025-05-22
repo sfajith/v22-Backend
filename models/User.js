@@ -80,6 +80,18 @@ const userSchema = new Schema({
   forgotPasswordExpires: {
     type: Date,
   },
+  olderPasswords: [
+    {
+      older: {
+        type: String,
+        required: true,
+      },
+      changedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
 });
 
 const User = mongoose.model("User", userSchema);

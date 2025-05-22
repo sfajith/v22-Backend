@@ -49,10 +49,10 @@ export const registerMiddleware = async (req, res, next) => {
     });
   }
 
-  if (triPassword.length < 8 || triPassword.length > 64) {
+  if (triPassword.length < 6 || triPassword.length > 64) {
     return res
       .status(400)
-      .json({ error: "La contraseña debe tener entre 8 y 64 caracteres." });
+      .json({ error: "La contraseña debe tener entre 6 y 64 caracteres." });
   }
 
   return next();
@@ -105,6 +105,11 @@ export const myAccountMiddleware = async (req, res, next) => {
     return next();
   } catch (error) {
     console.log(error);
+
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Token expirado" });
+    }
+
     return res.status(500).json({ error: "Error interno del servidor" });
   }
 };
