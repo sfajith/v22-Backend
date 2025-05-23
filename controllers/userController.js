@@ -472,8 +472,8 @@ export const emailValidationController = async (req, res) => {
 export const passwordValidationControlador = async (req, res) => {
   try {
     const { password } = req.body;
-    const isGood = await checkPwnedPassword(password);
-    if (!isGood)
+    const isBad = await checkPwnedPassword(password);
+    if (isBad)
       return res
         .status(400)
         .json({ error: "la contraseña se encuentra en Pwned" });
