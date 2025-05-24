@@ -56,6 +56,12 @@ export const registerMiddleware = async (req, res, next) => {
       .json({ error: "La contraseña debe tener entre 6 y 64 caracteres." });
   }
 
+  const isStrength = validatePasswordStrength(password);
+
+  if (isStrength.strength === "Débil") {
+    return res.status(400).json({ error: "Esta es una contraseña débil" });
+  }
+
   return next();
 };
 
