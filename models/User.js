@@ -92,6 +92,21 @@ const userSchema = new Schema({
       },
     },
   ],
+  failLogin: {
+    count: {
+      type: Number,
+      default: 0,
+      required: true,
+    },
+    lastAttempt: {
+      type: Date,
+      default: Date.now,
+    },
+    blockedUntil: {
+      type: Date,
+      default: null,
+    },
+  },
 });
 
 const User = mongoose.model("User", userSchema);

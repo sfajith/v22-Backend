@@ -69,8 +69,50 @@ export const loginController = async (req, res) => {
       if (!user)
         return res.status(404).json({ error: "Usuario no encontrado" });
 
+      if (user.failLogin.blockedUntil) {
+        const blockedUntilDate = new Date(user.failLogin.blockedUntil);
+        const now = new Date();
+
+        if (blockedUntilDate > now) {
+          return res.status(403).json({
+            error: `Por seguridad, tu cuenta ha sido bloqueada hasta las ${blockedUntilDate.toTimeString().slice(0, 8)}.
+Puedes restablecer tu contraseña si deseas acceder antes.`,
+          });
+        }
+
+        if (blockedUntilDate <= now) {
+          await User.updateOne(
+            { email },
+            {
+              $set: {
+                "failLogin.count": 0,
+                "failLogin.blockedUntil": null,
+              },
+            }
+          );
+        }
+      }
+
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
+        const newCount = user.failLogin.count + 1;
+        const now = new Date();
+        const blockedUntilDate = new Date(now.getTime() + 15 * 60 * 1000);
+
+        await User.updateOne(
+          { email },
+          {
+            $set: {
+              "failLogin.lastAttempt": now,
+              ...(newCount === 5 && {
+                "failLogin.blockedUntil": blockedUntilDate,
+              }),
+            },
+            $inc: {
+              "failLogin.count": 1,
+            },
+          }
+        );
         return res
           .status(401)
           .json({ error: "Usuario y/o contraseña incorrectos" });
@@ -100,6 +142,7 @@ export const loginController = async (req, res) => {
       });
     }
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Error interno en el servidor" });
   }
 };
@@ -427,11 +470,33 @@ export const recoverPasswordController = async (req, res) => {
       const hashedPassword = await bcrypt.hash(plainPassword, salt); // Hashea la contraseña
       return hashedPassword;
     };
+    const oldPassword = user.password;
+    const olderPasswords = user.olderPasswords || [];
+    const newOlderPasswords = [
+      ...olderPasswords,
+      { older: oldPassword, changedAt: new Date() },
+    ];
+
+    if (newOlderPasswords.length > 24) {
+      newOlderPasswords.shift();
+    }
+
+    for (const item of olderPasswords) {
+      const isSame = await bcrypt.compare(trimmedPassword, item.older);
+      if (isSame) {
+        return res.status(400).json({
+          error:
+            "Ya has usado esta contraseña recientemente. Por favor, elige una diferente.",
+        });
+      }
+    }
     const securePassword = await hashPassword(trimmedPassword);
 
     user.forgotPasswordToken = null;
     user.forgotPasswordExpires = null;
     user.password = securePassword;
+    user.failLogin.count = 0;
+    user.failLogin.blockedUntil = null;
 
     await user.save();
 

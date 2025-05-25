@@ -96,7 +96,7 @@ export const myAccountMiddleware = async (req, res, next) => {
     //verificando token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
-
+    //console.log(user.failLogin.blockedUntil);
     if (!user) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
@@ -104,6 +104,7 @@ export const myAccountMiddleware = async (req, res, next) => {
     /* if (user.username !== username) {
       return res.status(403).json({ error: "No tienes permiso para esto" });
     } */
+
     if (user.tokenVersion !== decoded.tokenVersion) {
       return res.status(401).json({ error: "Token invalido o expirado" });
     }
