@@ -3,11 +3,25 @@ import dotenv from "dotenv";
 import User from "../models/User.js";
 import crypto from "crypto";
 import { validatePasswordStrength } from "../../shared/dist/validatePasswordStrength.js";
+import { areYouHuman } from "../utils/areYouHuman.js";
 
 dotenv.config();
 
 export const registerMiddleware = async (req, res, next) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, gToken } = req.body;
+
+  if (!gToken) {
+    return res.status(400).json({ error: "Token de reCAPTCHA es requerido" });
+  }
+
+  const human = await areYouHuman(gToken);
+
+  if (!human) {
+    return res.status(403).json({
+      error:
+        "No pudimos verificar que seas humano. Por favor, intenta nuevamente.",
+    });
+  }
 
   if (!username || !email || !password) {
     return res.status(400).json({ error: "datos imcompletos" });
@@ -65,16 +79,33 @@ export const registerMiddleware = async (req, res, next) => {
   return next();
 };
 
-export const loginMiddleware = (req, res, next) => {
-  const { username, email, password } = req.body;
+export const loginMiddleware = async (req, res, next) => {
+  try {
+    const { username, email, password, gToken } = req.body;
+    const credential = username || email;
 
-  const credential = username || email;
+    if (!gToken) {
+      return res.status(400).json({ error: "Token de reCAPTCHA es requerido" });
+    }
 
-  if (!credential || !password) {
-    return res.status(400).json({ error: "Datos incompletos" });
+    const human = await areYouHuman(gToken);
+
+    if (!human) {
+      return res.status(403).json({
+        error:
+          "No pudimos verificar que seas humano. Por favor, intenta nuevamente.",
+      });
+    }
+
+    if (!credential || !password) {
+      return res.status(400).json({ error: "Datos incompletos" });
+    }
+
+    return next();
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "error interno en el servidor" });
   }
-
-  return next();
 };
 
 export const myAccountMiddleware = async (req, res, next) => {
