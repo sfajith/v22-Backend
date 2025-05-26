@@ -8,6 +8,7 @@ import crypto from "crypto";
 import sendConfirmationEmail from "../utils/sendEmail.js";
 import forgotPasswordEmail from "../utils/forgotPasswordEmail.js";
 import { checkPwnedPassword } from "../utils/checkPwnedPassword.js";
+import passwordWasChanged from "../utils/passwordWasChanged.js";
 
 dotenv.config();
 
@@ -309,6 +310,8 @@ export const resetPasswordController = async (req, res) => {
       },
       { new: true }
     );
+
+    await passwordWasChanged(user.email, user.username);
     return res
       .status(200)
       .json({ success: "Contraseña actualizada con exito" });
@@ -499,7 +502,7 @@ export const recoverPasswordController = async (req, res) => {
     user.failLogin.blockedUntil = null;
 
     await user.save();
-
+    await passwordWasChanged(user.email, user.username);
     return res
       .status(200)
       .json({ success: "Contraseña reestablecida con exito." });
