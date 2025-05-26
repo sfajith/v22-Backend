@@ -118,6 +118,14 @@ Puedes restablecer tu contraseña si deseas acceder antes.`,
           .status(401)
           .json({ error: "Usuario y/o contraseña incorrectos" });
       }
+
+      if (!user.isVerified) {
+        return res.status(401).json({
+          error:
+            "Tu cuenta aún no ha sido verificada. Por favor revisa tu correo o solicita un nuevo enlace.",
+        });
+      }
+
       const token = jwt.sign(
         {
           id: user._id,
