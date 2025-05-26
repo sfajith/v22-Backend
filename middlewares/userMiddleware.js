@@ -202,9 +202,22 @@ export const resendVerifyMiddleware = async (req, res, next) => {
 
 export const forgotPasswordMiddleware = async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const { email, gToken } = req.body;
     const trimmedEmail = email.trim().toLowerCase();
     const user = await User.findOne({ email: trimmedEmail });
+
+    if (!gToken) {
+      return res.status(400).json({ error: "Token de reCAPTCHA es requerido" });
+    }
+
+    const human = await areYouHuman(gToken);
+
+    if (!human) {
+      return res.status(403).json({
+        error:
+          "No pudimos verificar que seas humano. Por favor, intenta nuevamente.",
+      });
+    }
 
     if (!user) {
       return res
