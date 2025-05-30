@@ -6,6 +6,7 @@ import swagger from "swagger-ui-express";
 import YAML from "yamljs";
 import userRoutes from "./routes/userRoutes.js";
 import linkRoutes from "./routes/linkRoutes.js";
+import authRoutes from "./auth/authRoutes.js";
 import cors from "cors";
 import cron from "node-cron";
 import { cleanOldLinks } from "./cron/cleanOldLinks.js";
@@ -48,6 +49,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use("/", linkRoutes);
+app.use("/auth", authRoutes);
 app.use("/api/user", userRoutes);
 
 app.use("/doc/link", swagger.serve, swagger.setup(swaggerDocument));
