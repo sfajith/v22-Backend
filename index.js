@@ -10,6 +10,7 @@ import authRoutes from "./auth/authRoutes.js";
 import cors from "cors";
 import cron from "node-cron";
 import { cleanOldLinks } from "./cron/cleanOldLinks.js";
+import cookieParser from "cookie-parser";
 
 import { dbConnect } from "./db/mongo.js";
 
@@ -29,15 +30,21 @@ const limiter = rateLimit({
     });
   },
 });
-
-const app = express();
-const swaggerDocument = YAML.load("./openapi.yaml");
-
 dbConnect();
 
-app.use(cors());
-app.use(helmet());
+const app = express();
 
+// Middleware para procesar JSON
+const swaggerDocument = YAML.load("./openapi.yaml");
+app.use(express.json());
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+app.use(helmet());
 app.use(compresion());
 
 app.use(limiter);
@@ -45,8 +52,6 @@ app.use(limiter);
 app.disable("x-powered-by");
 
 app.use(express.urlencoded({ extended: true }));
-// Middleware para procesar JSON
-app.use(express.json());
 
 app.use("/", linkRoutes);
 app.use("/auth", authRoutes);

@@ -3,6 +3,12 @@ import User from "../models/User.js";
 import crypto from "crypto";
 import { validatePasswordStrength } from "../../shared/dist/validatePasswordStrength.js";
 import { areYouHuman } from "../utils/areYouHuman.js";
+import jwt from "jsonwebtoken";
+import redisClient from "./redis.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/tokenGenerator.js";
 
 dotenv.config();
 
@@ -83,7 +89,7 @@ export const loginMiddleware = async (req, res, next) => {
     const { username, email, password, gToken } = req.body;
     const credential = username || email;
 
-    if (!gToken) {
+    /* if (!gToken) {
       return res.status(400).json({ error: "Token de reCAPTCHA es requerido" });
     }
 
@@ -95,7 +101,7 @@ export const loginMiddleware = async (req, res, next) => {
           "No pudimos verificar que seas humano. Por favor, intenta nuevamente.",
       });
     }
-
+ */
     if (!credential || !password) {
       return res.status(400).json({ error: "Datos incompletos" });
     }
@@ -219,5 +225,104 @@ export const recoverPasswordMiddleware = async (req, res, next) => {
     return next();
   } catch (error) {
     return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+export const renewMiddleware = async (req, res) => {
+  console.log("entra renewMiddleware");
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    console.log(refreshToken, "refreshToken que recibo en renew");
+    if (!refreshToken)
+      return res
+        .status(403)
+        .json({ error: "No existe el token sesion invalida" });
+
+    const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+    const userId = payload.id;
+
+    const existOnRedis = await redisClient.get(`refreshToken:${userId}`);
+
+    if (!existOnRedis) return res.status(401).json({ error: "Token invalido" });
+
+    /*     if (existOnRedis) {
+      await redisClient.del(`refreshToken:${userId}`);
+    } */
+
+    const user = await User.findById(userId).lean();
+
+    if (!user) return res.status(404).json({ error: "Usuario invalido" });
+
+    const accessToken = generateAccessToken(user);
+    const newRefreshToken = generateRefreshToken(user);
+
+    await redisClient.set(
+      `refreshToken:${user.id}`,
+      newRefreshToken,
+      "EX",
+      60 * 60 * 24 * 7
+    );
+    console.log(
+      `Voy a enviar nuevo refreshToken en Set-Cookie ${newRefreshToken}`
+    );
+    return res
+      .status(200)
+      .cookie("refreshToken", newRefreshToken, {
+        httpOnly: true,
+        sameSite: "lax", // para localhost en HTTP
+        secure: false, // debe ser false si no usas HTTPS
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      })
+      .json({
+        accessToken,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          statistics: user.statistics,
+          LinkActivity: user.LinkActivity,
+          clickAnalitycs: user.clickAnalitycs,
+        },
+      });
+  } catch (error) {
+    console.log(error);
+    return res.status(403).json({ error: "Error al generar nuevo token" });
+  }
+};
+
+export const logoutMiddleware = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken)
+      return res
+        .status(403)
+        .json({ error: "No existe el token sesion invalida" });
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+    const userId = decoded.id;
+
+    const existOnRedis = await redisClient.get(`refreshToken:${userId}`);
+
+    if (!existOnRedis) return res.status(401).json({ error: "Token invalido" });
+
+    const exp = decoded.exp;
+    const now = Math.floor(Date.now() / 1000);
+    const ttl = exp - now;
+
+    if (ttl > 0) {
+      await redisClient.set(`blacklist:${refreshToken}`, "1", "EX", ttl);
+    }
+    await redisClient.del(`refreshToken:${userId}`);
+
+    return res
+      .clearCookie("refreshToken", { path: "/" })
+      .status(200)
+      .json({ success: "Sesión cerrada correctamente" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "Error cerrando sesión" });
   }
 };
