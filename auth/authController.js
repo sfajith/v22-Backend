@@ -1,13 +1,16 @@
 import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import Link from "../models/Links.js";
-import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import sendConfirmationEmail from "../utils/sendEmail.js";
 import forgotPasswordEmail from "../utils/forgotPasswordEmail.js";
 import passwordWasChanged from "../utils/passwordWasChanged.js";
 import redisClient from "./redis.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/tokenGenerator.js";
 
 dotenv.config();
 
@@ -125,33 +128,43 @@ Puedes restablecer tu contraseña si deseas acceder antes.`,
         });
       }
 
-      const token = jwt.sign(
-        {
-          id: user._id,
-          username: user.username,
-          tokenVersion: user.tokenVersion,
-        },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: process.env.JWT_EXPIRES,
-        }
+      const accessToken = generateAccessToken(user);
+      const refreshToken = generateRefreshToken(user);
+      const userId = user.id || user._id.toString();
+
+      await redisClient.set(
+        `refreshToken:${user.id}`,
+        refreshToken,
+        "EX",
+        60 * 60 * 24 * 7
       );
+      // console.log(refreshToken, "refreshToken");
+      // console.log(accessToken, "accessToken");
+      const existOnRedis = await redisClient.get(`refreshToken:${user.id}`);
 
-      await redisClient.set(`token:${user.id}`, token, "EX", 60 * 60 * 24 * 7);
-      const redisToken = await redisClient.get(`token:${user.id}`);
-      console.log(redisToken);
+      // console.log(existOnRedis, "existe");
 
-      return res.status(200).json({
-        token,
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email,
-          statistics: user.statistics,
-          LinkActivity: user.LinkActivity,
-          clickAnalitycs: user.clickAnalitycs,
-        },
-      });
+      console.log(refreshToken, "refrehstoken generado enlogin");
+      return res
+        .status(200)
+        .cookie("refreshToken", refreshToken, {
+          httpOnly: true,
+          sameSite: "lax", // para localhost en HTTP
+          secure: false, // debe ser false si no usas HTTPS
+          path: "/",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        })
+        .json({
+          accessToken,
+          user: {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            statistics: user.statistics,
+            LinkActivity: user.LinkActivity,
+            clickAnalitycs: user.clickAnalitycs,
+          },
+        });
     }
   } catch (error) {
     console.log(error);

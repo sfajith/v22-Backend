@@ -6,6 +6,7 @@ export const myAccountMiddleware = async (req, res, next) => {
   const { username } = req.params;
   try {
     const authHeader = req.header("Authorization");
+
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         error: "No tienes permiso para esto (token ausente o mal formado)",
@@ -13,13 +14,14 @@ export const myAccountMiddleware = async (req, res, next) => {
     }
 
     const token = req.header("Authorization")?.replace("Bearer ", "");
+    console.log(token, "accesstokend esde retry");
 
     if (!token) {
       return res.status(401).json({ error: "No tienes permiso para esto" });
     }
 
     //verificando token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
     const user = await User.findById(decoded.id);
     //console.log(user.failLogin.blockedUntil);
     if (!user) {
@@ -37,10 +39,13 @@ export const myAccountMiddleware = async (req, res, next) => {
     req.user = user;
     return next();
   } catch (error) {
-    console.log(error);
-
+    // console.log(error);
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({ error: "Token expirado" });
+    }
+
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ error: "Token inválido o mal formado" });
     }
 
     return res.status(500).json({ error: "Error interno del servidor" });
