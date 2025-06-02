@@ -15,7 +15,6 @@ import {
   deleteController,
   resetPasswordController,
   logoutController,
-  authController,
   verifyAccountController,
   resendVerifyController,
   forgotPasswordController,
@@ -44,7 +43,6 @@ router.post(
   recoverPasswordMiddleware,
   recoverPasswordController
 );
-router.post("/auth", myAccountMiddleware, authController);
 router.post("/logout", logoutMiddleware);
 router.put("/:username/reset", myAccountMiddleware, resetPasswordController);
 router.post("/:username/delete", myAccountMiddleware, deleteController);

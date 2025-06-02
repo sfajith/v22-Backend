@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import { validatePasswordStrength } from "../../shared/dist/validatePasswordStrength.js";
 
 export const myAccountMiddleware = async (req, res, next) => {
+  console.log("entrando a myaacounts");
   const { username } = req.params;
   try {
     const authHeader = req.header("Authorization");
@@ -32,14 +33,14 @@ export const myAccountMiddleware = async (req, res, next) => {
       return res.status(403).json({ error: "No tienes permiso para esto" });
     } */
 
-    if (user.tokenVersion !== decoded.tokenVersion) {
+    /*     if (user.tokenVersion !== decoded.tokenVersion) {
       return res.status(401).json({ error: "Token invalido o expirado" });
-    }
+    } */
 
     req.user = user;
     return next();
   } catch (error) {
-    // console.log(error);
+    console.log(error);
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({ error: "Token expirado" });
     }
