@@ -89,7 +89,7 @@ export const loginMiddleware = async (req, res, next) => {
     const { username, email, password, gToken } = req.body;
     const credential = username || email;
 
-    /* if (!gToken) {
+    if (!gToken) {
       return res.status(400).json({ error: "Token de reCAPTCHA es requerido" });
     }
 
@@ -101,7 +101,7 @@ export const loginMiddleware = async (req, res, next) => {
           "No pudimos verificar que seas humano. Por favor, intenta nuevamente.",
       });
     }
- */
+
     if (!credential || !password) {
       return res.status(400).json({ error: "Datos incompletos" });
     }
@@ -235,20 +235,17 @@ export const renewMiddleware = async (req, res) => {
     console.log(refreshToken, "refreshToken que recibo en renew");
     if (!refreshToken)
       return res
-        .status(403)
+        .status(401)
         .json({ error: "No existe el token sesion invalida" });
 
     const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-
     const userId = payload.id;
 
     const existOnRedis = await redisClient.get(`refreshToken:${userId}`);
 
     if (!existOnRedis) return res.status(401).json({ error: "Token invalido" });
-
-    /*     if (existOnRedis) {
-      await redisClient.del(`refreshToken:${userId}`);
-    } */
+    const isBlackListed = await redisClient.exists(`blacklist:${refreshToken}`);
+    if (isBlackListed) return res.status(401).json({ error: "Token inválido" });
 
     const user = await User.findById(userId).lean();
 
@@ -295,10 +292,7 @@ export const renewMiddleware = async (req, res) => {
 export const logoutMiddleware = async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken)
-      return res
-        .status(403)
-        .json({ error: "No existe el token sesion invalida" });
+    if (!refreshToken) return res.status(401).json({ error: "Token inválido" });
 
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
 

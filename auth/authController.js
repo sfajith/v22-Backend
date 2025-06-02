@@ -130,7 +130,6 @@ Puedes restablecer tu contraseña si deseas acceder antes.`,
 
       const accessToken = generateAccessToken(user);
       const refreshToken = generateRefreshToken(user);
-      const userId = user.id || user._id.toString();
 
       await redisClient.set(
         `refreshToken:${user.id}`,
@@ -138,13 +137,8 @@ Puedes restablecer tu contraseña si deseas acceder antes.`,
         "EX",
         60 * 60 * 24 * 7
       );
-      // console.log(refreshToken, "refreshToken");
-      // console.log(accessToken, "accessToken");
-      const existOnRedis = await redisClient.get(`refreshToken:${user.id}`);
 
-      // console.log(existOnRedis, "existe");
-
-      console.log(refreshToken, "refrehstoken generado enlogin");
+      // console.log(refreshToken, "refrehstoken generado enlogin");
       return res
         .status(200)
         .cookie("refreshToken", refreshToken, {
@@ -296,25 +290,6 @@ export const logoutController = async (req, res) => {
     res.status(200).json({ success: "El usuario ha cerrado sesion" });
   } catch (error) {
     res.status(500).json({ error: "error interno en el servidor" });
-  }
-};
-
-export const authController = async (req, res) => {
-  try {
-    const user = req.user;
-    return res.status(200).json({
-      ok: true,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        statistics: user.statistics,
-        LinkActivity: user.LinkActivity,
-        clickAnalitycs: user.clickAnalitycs,
-      },
-    });
-  } catch (error) {
-    return res.status(500).json({ error: "error interno del servidor" });
   }
 };
 
