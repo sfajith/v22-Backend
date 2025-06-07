@@ -18,9 +18,10 @@ export const createShortLink = async (req, res) => {
 
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
         user = await User.findById(decoded.id);
       } catch (error) {
+        console.log(error, "desde el controlador");
         return res.status(401).json({ error: "Solicitud invalida" });
       }
     }
