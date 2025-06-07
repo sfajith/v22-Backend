@@ -77,3 +77,39 @@ export const liveCodeMiddleware = async (req, res, next) => {
     return res.status(500).json({ error: "Error interno en el servidor" });
   }
 };
+
+export const secureLinkCheckerMiddleware = async (req, res) => {
+  const { url } = req.body;
+
+  const body = {
+    client: { clientId: "v22", clientVersion: "1.0" },
+    threatInfo: {
+      threatTypes: ["MALWARE", "SOCIAL_ENGINEERING"],
+      platformTypes: ["ANY_PLATFORM"],
+      threatEntryTypes: ["URL"],
+      threatEntries: [{ url }],
+    },
+  };
+
+  fetch(
+    `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${process.env.SECURE_BROWSER_API}`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: { "Content-Type": "application/json" },
+    }
+  )
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data);
+      if (data.matches && data.matches.length > 0) {
+        res.status(403).json({ error: "Url maliciosa detectada" });
+      } else {
+        res.status(200).json({ success: "Url segura" });
+      }
+    })
+    .catch((error) => {
+      console.error("Error al validar el enlace:", error);
+      res.status(500).json({ error: "Error en la verificación de seguridad" });
+    });
+};
