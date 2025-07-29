@@ -1,18 +1,18 @@
-import compresion from "compresion";
-import helmet from "helmet";
-import { rateLimit } from "express-rate-limit";
-import express from "express";
-import swagger from "swagger-ui-express";
-import YAML from "yamljs";
-import userRoutes from "./routes/userRoutes.js";
-import linkRoutes from "./routes/linkRoutes.js";
-import authRoutes from "./auth/authRoutes.js";
-import cors from "cors";
-import cron from "node-cron";
-import { cleanOldLinks } from "./cron/cleanOldLinks.js";
-import cookieParser from "cookie-parser";
+import compresion from 'compresion';
+import helmet from 'helmet';
+import { rateLimit } from 'express-rate-limit';
+import express from 'express';
+import swagger from 'swagger-ui-express';
+import YAML from 'yamljs';
+import userRoutes from './routes/userRoutes.js';
+import linkRoutes from './routes/linkRoutes.js';
+import authRoutes from './auth/authRoutes.js';
+import cors from 'cors';
+import cron from 'node-cron';
+import { cleanOldLinks } from './cron/cleanOldLinks.js';
+import cookieParser from 'cookie-parser';
 
-import { dbConnect } from "./db/mongo.js";
+import { dbConnect } from './db/mongo.js';
 
 const cfg = {
   port: process.env.PORT || 3000,
@@ -21,12 +21,12 @@ const cfg = {
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 100,
-  standardHeaders: "draft-8",
+  standardHeaders: 'draft-8',
   legacyHeaders: false,
   handler: (req, res) => {
     res.status(429).json({
       error:
-        "Has superado el límite de peticiones. Intenta nuevamente en unos minutos.",
+        'Has superado el límite de peticiones. Intenta nuevamente en unos minutos.',
     });
   },
 });
@@ -35,32 +35,32 @@ dbConnect();
 const app = express();
 
 // Middleware para procesar JSON
-const swaggerDocument = YAML.load("./openapi.yaml");
+const swaggerDocument = YAML.load('./openapi.yaml');
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: 'http://localhost:5173',
     credentials: true,
-  })
+  }),
 );
 app.use(helmet());
 app.use(compresion());
 
 app.use(limiter);
 
-app.disable("x-powered-by");
+app.disable('x-powered-by');
 
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/", linkRoutes);
-app.use("/auth", authRoutes);
-app.use("/api/user", userRoutes);
+app.use('/', linkRoutes);
+app.use('/auth', authRoutes);
+app.use('/api/user', userRoutes);
 
-app.use("/doc/link", swagger.serve, swagger.setup(swaggerDocument));
+app.use('/doc/link', swagger.serve, swagger.setup(swaggerDocument));
 
-cron.schedule("0 2 * * *", async () => {
-  console.log("⏰ Ejecutando limpieza de enlaces...");
+cron.schedule('0 2 * * *', async () => {
+  console.log('⏰ Ejecutando limpieza de enlaces...');
   await cleanOldLinks();
 });
 
