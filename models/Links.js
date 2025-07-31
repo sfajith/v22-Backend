@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const LinkSchema = new mongoose.Schema({
   originalUrl: {
@@ -35,11 +35,15 @@ const LinkSchema = new mongoose.Schema({
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: 'User',
     default: null,
+  },
+  qrUrl: {
+    type: String,
+    required: true,
   },
 });
 
-const Link = mongoose.model("Link", LinkSchema);
+const Link = mongoose.model('Link', LinkSchema);
 
 export default Link;
