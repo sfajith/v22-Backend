@@ -111,6 +111,7 @@ export const createShortLink = async (req, res) => {
         idLink,
         originalUrl,
         shorter: `http://localhost:3000/${shorter}`,
+        qrUrl,
         clickHistory,
         clicks: 0,
         visitors: 0,

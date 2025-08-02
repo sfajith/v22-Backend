@@ -1,7 +1,7 @@
-import User from "../models/User.js";
-import Link from "../models/Links.js";
-import mongoose from "mongoose";
-import { checkPwnedPassword } from "../utils/checkPwnedPassword.js";
+import User from '../models/User.js';
+import Link from '../models/Links.js';
+import mongoose from 'mongoose';
+import { checkPwnedPassword } from '../utils/checkPwnedPassword.js';
 
 export const myAccountController = async (req, res) => {
   res.json({
@@ -41,7 +41,7 @@ export const myCollectionController = async (req, res) => {
     const nextCursor =
       links.length > 0 ? links[links.length - 1].createdAt : null;
 
-    const collection = links.map((link) => ({
+    const collection = links.map(link => ({
       idLink: link._id,
       originalUrl: link.originalUrl,
       shorter: `http://localhost:3000/${link.shorter}`,
@@ -49,6 +49,7 @@ export const myCollectionController = async (req, res) => {
       visitors: link.visitors.length,
       clickHistory: link.clickHistory,
       date: link.createdAt,
+      qrUrl: link.qrUrl,
     }));
 
     res.status(200).json({
@@ -58,7 +59,7 @@ export const myCollectionController = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error interno en el servidor" });
+    res.status(500).json({ error: 'Error interno en el servidor' });
   }
 };
 
@@ -69,23 +70,23 @@ export const deleteLinkController = async (req, res) => {
     const { linkId, username } = req.params;
 
     if (!linkId || !username) {
-      return res.status(400).json({ error: "Error en la solicitud" });
+      return res.status(400).json({ error: 'Error en la solicitud' });
     }
 
     if (user.username !== username) {
-      return res.status(403).json({ error: "No estas autorizado para esto" });
+      return res.status(403).json({ error: 'No estas autorizado para esto' });
     }
 
     const existsLink = await Link.exists({ _id: linkId });
 
     if (!existsLink) {
-      return res.status(404).json({ error: "No existe el enlace" });
+      return res.status(404).json({ error: 'No existe el enlace' });
     }
 
     const ownLink = await User.exists({ _id: user.id, shortLinks: linkId });
 
     if (!ownLink) {
-      return res.status(403).json({ error: "No estas autorizado para esto" });
+      return res.status(403).json({ error: 'No estas autorizado para esto' });
     }
 
     session = await mongoose.startSession();
@@ -96,19 +97,19 @@ export const deleteLinkController = async (req, res) => {
       await User.findByIdAndUpdate(
         user.id,
         { $pull: { shortLinks: linkId } },
-        { new: true }
+        { new: true },
       ).session(session);
 
       await session.commitTransaction();
       session.endSession();
-      return res.status(200).json({ success: "Enlace eliminado con exito" });
+      return res.status(200).json({ success: 'Enlace eliminado con exito' });
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
       throw error;
     }
   } catch (error) {
-    return res.status(500).json({ error: "error interno del servidor" });
+    return res.status(500).json({ error: 'error interno del servidor' });
   } finally {
     if (session) {
       await session.endSession();
@@ -121,11 +122,11 @@ export const usernameValidationController = async (req, res) => {
     if (req.user) {
       return res
         .status(409)
-        .json({ error: "Nombre de usuario ya está en uso" });
+        .json({ error: 'Nombre de usuario ya está en uso' });
     }
-    return res.status(200).json({ success: "Disponible!" });
+    return res.status(200).json({ success: 'Disponible!' });
   } catch (error) {
-    return res.status(500).json({ error: "error interno del servidor" });
+    return res.status(500).json({ error: 'error interno del servidor' });
   }
 };
 
@@ -134,11 +135,11 @@ export const emailValidationController = async (req, res) => {
     if (req.userEmail) {
       return res
         .status(409)
-        .json({ error: "Ya existe una cuenta registrada con este correo" });
+        .json({ error: 'Ya existe una cuenta registrada con este correo' });
     }
-    return res.status(200).json({ success: "Disponible!" });
+    return res.status(200).json({ success: 'Disponible!' });
   } catch (error) {
-    return res.status(500).json({ error: "error interno del servidor" });
+    return res.status(500).json({ error: 'error interno del servidor' });
   }
 };
 
@@ -149,10 +150,10 @@ export const passwordValidationControlador = async (req, res) => {
     if (isBad)
       return res
         .status(400)
-        .json({ error: "la contraseña se encuentra en Pwned" });
+        .json({ error: 'la contraseña se encuentra en Pwned' });
 
-    return res.status(200).json({ success: "la contraseña es segura" });
+    return res.status(200).json({ success: 'la contraseña es segura' });
   } catch (error) {
-    return res.status(500).json({ error: "Error interno en el servidor" });
+    return res.status(500).json({ error: 'Error interno en el servidor' });
   }
 };
